@@ -16,8 +16,10 @@ def get_voices():
         'Ocp-Apim-Subscription-Key':SUBSCRIPTION_KEY
     }
     voices = requests.get(voices_url, headers=headers)
-    
-    return json.loads(voices.text)
+    if voices.ok:
+        return json.loads(voices.text)
+    else:
+        return Response(voices.reason, voices.status_code)
 
 @app.route('/texttospeech', methods=['GET', 'POST'])
 def cognitive_service():
@@ -56,9 +58,11 @@ def call_azure_cognitive_api(text, voice_short_name = "en-US-ChristopherNeural")
     body = ElementTree.tostring(xml_body)
     
     response = requests.post(cognitive_service_url,data=body,headers=headers)
-    print(response)
-    return Response(response.iter_content(chunk_size=10*1024),
+    if response.ok:
+        return Response(response.iter_content(chunk_size=10*1024),
                     content_type=response.headers['Content-Type'])
+    else:
+        return Response(response.reason, response.status_code)
 
 def get_token():
     fetch_token_url = 'https://eastus.api.cognitive.microsoft.com/sts/v1.0/issueToken'
